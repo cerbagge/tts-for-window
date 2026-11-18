@@ -1,6 +1,6 @@
 [package]
 name = "tts-for-window"
-version = "2.0.0"
+version = "2.1.0"
 edition = "2024"
 license = "MIT AND LGPL-3.0-only"
 repository = "https://github.com/cerbagge/tts-for-window"

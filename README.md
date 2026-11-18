@@ -1,4 +1,4 @@
-# TTS for Window (v2.0.0)
+# TTS for Window (v2.1.0)
 
 Edge TTS(무료, API 키 불필요)로 음성을 생성해서 가상 마이크(VB-Cable)로 내보내는 Windows 프로그램입니다.
 Discord, 게임, OBS 등에서 마이크처럼 사용할 수 있습니다.
@@ -16,7 +16,7 @@ Discord, 게임, OBS 등에서 마이크처럼 사용할 수 있습니다.
 3. 출력 (가상 마이크) → `CABLE Input (VB-Audio Virtual Cable)` 선택
 4. 모니터 (내 스피커) → 내 헤드셋/스피커 선택 (내가 듣는 용도)
 5. Discord 설정 → 음성 및 비디오 → 입력 장치 → `CABLE Output (VB-Audio Virtual Cable)`
-6. 텍스트 입력 후 Enter
+6. 텍스트 입력 후 Enter (ㅋㅋㅋ→크크크, ㄱㄱ→고고, ㅇㅋ→오케이처럼 초성 줄임말은 자동으로 읽을 수 있는 말로 바꿔서 요청)
 
 ## 빌드
 ```

@@ -88,8 +88,9 @@ impl App {
     }
 
     fn speak(&mut self) {
-        let text = self.text.trim().to_string();
+        let text = expand_jamo(self.text.trim()).trim().to_string();
         if text.is_empty() {
+            self.text.clear();
             return;
         }
         self.busy += 1;
@@ -134,6 +135,62 @@ impl App {
             }
         }
     }
+}
+
+/// Edge cannot read chat shorthand made of bare jamo (ㅋㅋㅋ, ㄱㄱ, ...).
+/// Replace each jamo run with its most common reading; drop unknown jamo.
+fn expand_jamo(text: &str) -> String {
+    const WORDS: &[(&str, &str)] = &[
+        ("ㅇㅋ", "오케이"), ("ㄱㅅ", "감사"), ("ㄳ", "감사"), ("ㅅㄱ", "수고"),
+        ("ㅈㅅ", "죄송"), ("ㅊㅋ", "축하"), ("ㅎㅇ", "하이"), ("ㄹㅇ", "레알"),
+        ("ㅇㅈ", "인정"), ("ㅁㅊ", "미친"),
+    ];
+    // Repeated letters (ㅋㅋ, ㄱㄱ, ㅂㅂ ...) are read per letter.
+    const LETTERS: &[(char, &str)] = &[
+        ('ㅋ', "크"), ('ㅎ', "흐"), ('ㅠ', "흑"), ('ㅜ', "흑"), ('ㄱ', "고"),
+        ('ㄷ', "덜"), ('ㅇ', "응"), ('ㄴ', "노"), ('ㅂ', "바이"), ('ㅃ', "빠이"),
+    ];
+    const MAX_REPEAT: usize = 3;
+    let is_jamo = |c: char| ('\u{3131}'..='\u{318E}').contains(&c);
+
+    let chars: Vec<char> = text.chars().collect();
+    let mut out = String::new();
+    let mut i = 0;
+    while i < chars.len() {
+        if !is_jamo(chars[i]) {
+            out.push(chars[i]);
+            i += 1;
+            continue;
+        }
+        let start = i;
+        while i < chars.len() && is_jamo(chars[i]) {
+            i += 1;
+        }
+        let run = &chars[start..i];
+        let mut j = 0;
+        while j < run.len() {
+            // Word first (2 jamo, or 1 for ㄳ), then a run of the same letter.
+            let word = [2, 1].iter().find_map(|&len| {
+                let piece: String = run.get(j..j + len)?.iter().collect();
+                WORDS.iter().find(|(k, _)| *k == piece).map(|(_, w)| (len, *w))
+            });
+            if let Some((len, w)) = word {
+                out.push_str(w);
+                j += len;
+                continue;
+            }
+            let c = run[j];
+            let mut n = 0;
+            while j < run.len() && run[j] == c {
+                n += 1;
+                j += 1;
+            }
+            if let Some((_, r)) = LETTERS.iter().find(|(k, _)| *k == c) {
+                out.push_str(&r.repeat(n.min(MAX_REPEAT)));
+            }
+        }
+    }
+    out
 }
 
 fn device_combo(ui: &mut egui::Ui, id: &str, devices: &[String], value: &mut Option<String>) -> bool {
@@ -297,4 +354,36 @@ fn main() -> eframe::Result {
         ..Default::default()
     };
     eframe::run_native("TTS for Window", options, Box::new(|cc| Ok(Box::new(App::new(cc)))))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::expand_jamo;
+
+    #[test]
+    fn expands_chat_shorthand() {
+        assert_eq!(expand_jamo("ㄱㄱ"), "고고");
+        assert_eq!(expand_jamo("ㅋㅋㅋ"), "크크크");
+        assert_eq!(expand_jamo("ㅋㅋㅋㅋㅋㅋㅋㅋ"), "크크크");
+        assert_eq!(expand_jamo("ㅎㅎ 좋아요"), "흐흐 좋아요");
+        assert_eq!(expand_jamo("ㅠㅠ"), "흑흑");
+        assert_eq!(expand_jamo("ㅇㅋ 알겠어"), "오케이 알겠어");
+        assert_eq!(expand_jamo("ㄹㅇㅋㅋ"), "레알크크");
+        assert_eq!(expand_jamo("ㅋㅋㅇㅋ"), "크크오케이");
+        assert_eq!(expand_jamo("ㄱㄱㄱㄱㄱ"), "고고고");
+        assert_eq!(expand_jamo("ㅂㅂ"), "바이바이");
+        assert_eq!(expand_jamo("ㄳ"), "감사");
+        assert_eq!(expand_jamo("가자ㄱㄱ"), "가자고고");
+        assert_eq!(expand_jamo("ㅁ"), "");
+        assert_eq!(expand_jamo("hello 안녕"), "hello 안녕");
+    }
+
+    /// Network test: `cargo test -- --ignored`
+    #[test]
+    #[ignore]
+    fn expanded_shorthand_synthesizes() {
+        let text = expand_jamo("ㅋㅋㅋ ㄱㄱ ㅇㅋ");
+        let mp3 = crate::edge::synthesize("ko-KR-SunHiNeural", &text, 1.0, 0.0).expect("synth");
+        assert!(mp3.len() > 1000, "{} bytes", mp3.len());
+    }
 }
