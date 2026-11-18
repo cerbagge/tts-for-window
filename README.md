@@ -5,7 +5,7 @@ Discord, 게임, OBS 등에서 마이크처럼 사용할 수 있습니다.
 
 ## 다운로드
 - 최신 버전: [Releases 페이지](https://github.com/cerbagge/tts-for-window/releases/latest)
-- v2.0.0 바로 받기: [tts-for-window-v2.0.0-windows-x64.exe](https://github.com/cerbagge/tts-for-window/releases/download/v2.0.0/tts-for-window-v2.0.0-windows-x64.exe) (Windows 10/11 x64, 설치 필요 없음)
+- v2.1.0 바로 받기: [tts-for-window-v2.1.0-windows-x64.exe](https://github.com/cerbagge/tts-for-window/releases/download/v2.1.0/tts-for-window-v2.1.0-windows-x64.exe) (Windows 10/11 x64, 설치 필요 없음)
 
 ## 준비
 1. VB-Cable 설치: https://vb-audio.com/Cable/ (설치 후 재부팅)
